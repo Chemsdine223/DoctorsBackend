@@ -12,6 +12,7 @@ urlpatterns = [
     path('consultationsPatient/<int:id>/',ConsultationPatient.as_view(), name='consultations-patient'),
     path('doctors/',DoctorsListView.as_view(), name='consultations-patient'),
     path('consulter/',CreateConsultationView.as_view(), name='creer-consultations'),
-    path('schedules/<int:doctor_id>/',GetSchedules.as_view(), name='consultations'),
+    path('schedules/<int:doctor_id>/',GetSchedules.as_view(), name='schedule-doctor'),
+    path('description/<int:id>/',AddDescription.as_view(), name='Description-doctor'),
 
 ]

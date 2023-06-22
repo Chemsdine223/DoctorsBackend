@@ -234,3 +234,22 @@ class CreateConsultationView(APIView):
 
         return Response(serializer.errors, status=400)
 
+
+
+class AddDescription(generics.GenericAPIView):
+    serializer_class = ConsultationSerializer  # Replace with your actual serializer class
+    
+    def post(self, request, *args, **kwargs):
+        consultation_id = request.data.get('consultation_id')
+        consultation_desc = request.data.get('description')
+        
+        try:
+            consultation = Consultations.objects.get(id=consultation_id)
+        except Consultations.DoesNotExist:
+            return Response({"error": "Consultation not found."}, status=status.HTTP_404_NOT_FOUND)
+        
+        consultation.description = consultation_desc
+        consultation.save()
+        
+        serializer = self.get_serializer(consultation)
+        return Response(serializer.data, status=status.HTTP_200_OK)
