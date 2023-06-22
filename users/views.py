@@ -106,6 +106,19 @@ class ConsultationListView(generics.ListAPIView):
         serializer = self.get_serializer(consultation)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+
+    def put(self, request, *args, **kwargs):
+        consultation_id = request.data.get('consultation_id')
+        try:
+            consultation = Consultations.objects.get(id=consultation_id)
+        except Consultations.DoesNotExist:
+            return Response({"error": "Consultation not found."}, status=status.HTTP_404_NOT_FOUND)
+        
+        consultation.status = 'refused'
+        consultation.save()
+        serializer = self.get_serializer(consultation)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
 class ConsultationPatient(generics.ListAPIView):
     serializer_class = ConsultationSerializer
 
