@@ -90,6 +90,8 @@ class Consultations(models.Model):
     heure_de_consultation = models.CharField(blank=True, max_length=200)
     date_de_consultation = models.CharField(blank=True, max_length=200)
     description = models.CharField(blank=True, max_length=200)
+    status = models.CharField(blank=True, max_length=200)
+    
 
 
 class Schedule(models.Model):

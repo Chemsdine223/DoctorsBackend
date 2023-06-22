@@ -79,6 +79,11 @@ class ScheduleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Schedule
         fields = ('doctor', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche')
+        
+class ScheduleGetSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Schedule
+        fields = ('lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche')
 
 
 # class ConsultationSerializer(serializers.ModelSerializer):

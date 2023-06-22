@@ -12,7 +12,7 @@ from rest_framework import permissions
 from django.contrib.auth import get_user_model
 
 
-from users.serializers import ConsultationSerializer, CreationConsultationSerializer, DoctorSerializer, PatientRegisterSerializer, ScheduleSerializer
+from users.serializers import ConsultationSerializer, CreationConsultationSerializer, DoctorSerializer, PatientRegisterSerializer, ScheduleGetSerializer, ScheduleSerializer
 
 
 from .models import Consultations, CustomUser, Doctor, Patient, Schedule
@@ -92,7 +92,19 @@ class ConsultationListView(generics.ListAPIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         else:
             return Response({"error": "No consultations found."}, status=status.HTTP_404_NOT_FOUND)
+    
 
+    def post(self, request, *args, **kwargs):
+        consultation_id = request.data.get('consultation_id')
+        try:
+            consultation = Consultations.objects.get(id=consultation_id)
+        except Consultations.DoesNotExist:
+            return Response({"error": "Consultation not found."}, status=status.HTTP_404_NOT_FOUND)
+        
+        consultation.status = 'accepted'
+        consultation.save()
+        serializer = self.get_serializer(consultation)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 class ConsultationPatient(generics.ListAPIView):
     serializer_class = ConsultationSerializer
@@ -143,7 +155,7 @@ class GetSchedules(APIView):
             doctor_id=doctor_id).first()
 
         if existing_schedule:
-            serializer = ScheduleSerializer(existing_schedule)
+            serializer = ScheduleGetSerializer(existing_schedule)
             return Response(serializer.data, status=status.HTTP_200_OK)
 
         return Response("Schedule not found", status=status.HTTP_404_NOT_FOUND)
