@@ -10,6 +10,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import permissions
 from django.contrib.auth import get_user_model
+from datetime import datetime, time
+import re
 
 
 from users.serializers import ConsultationSerializer, CreationConsultationSerializer, DoctorSerializer, PatientRegisterSerializer, ScheduleGetSerializer, ScheduleSerializer
@@ -20,6 +22,7 @@ from .models import Consultations, CustomUser, Doctor, Patient, Schedule
 
 def create():
     pass
+
 
 class LoginView(APIView):
     def post(self, request):
@@ -79,6 +82,7 @@ class LoginView(APIView):
 
 class ConsultationListView(generics.ListAPIView):
     serializer_class = ConsultationSerializer
+
     def get_queryset(self):
         doctor_id = self.kwargs['id']
         queryset = Consultations.objects.filter(doctor_id=doctor_id)
@@ -92,7 +96,6 @@ class ConsultationListView(generics.ListAPIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         else:
             return Response({"error": "No consultations found."}, status=status.HTTP_404_NOT_FOUND)
-    
 
     def post(self, request, *args, **kwargs):
         consultation_id = request.data.get('consultation_id')
@@ -100,12 +103,11 @@ class ConsultationListView(generics.ListAPIView):
             consultation = Consultations.objects.get(id=consultation_id)
         except Consultations.DoesNotExist:
             return Response({"error": "Consultation not found."}, status=status.HTTP_404_NOT_FOUND)
-        
+
         consultation.status = 'accepted'
         consultation.save()
         serializer = self.get_serializer(consultation)
         return Response(serializer.data, status=status.HTTP_200_OK)
-
 
     def put(self, request, *args, **kwargs):
         consultation_id = request.data.get('consultation_id')
@@ -113,11 +115,12 @@ class ConsultationListView(generics.ListAPIView):
             consultation = Consultations.objects.get(id=consultation_id)
         except Consultations.DoesNotExist:
             return Response({"error": "Consultation not found."}, status=status.HTTP_404_NOT_FOUND)
-        
+
         consultation.status = 'refused'
         consultation.save()
         serializer = self.get_serializer(consultation)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 class ConsultationPatient(generics.ListAPIView):
     serializer_class = ConsultationSerializer
@@ -162,7 +165,7 @@ class ScheduleView(APIView):
         return Response("Schedule not found", status=status.HTTP_404_NOT_FOUND)
 
 
-class GetSchedules(APIView):                                      
+class GetSchedules(APIView):
     def get(self, request, doctor_id):
         existing_schedule = Schedule.objects.filter(
             doctor_id=doctor_id).first()
@@ -219,15 +222,48 @@ class CreateConsultationView(APIView):
         if serializer.is_valid():
             patient_id = serializer.validated_data.get('patient_id')
             doctor_id = serializer.validated_data.get('doctor_id')
+            consultation_date_str = serializer.validated_data.get(
+                'date_de_consultation')
+            consultation_time_str = serializer.validated_data.get(
+                'heure_de_consultation')
+
+            # Parse date from string
+            consultation_date = datetime.strptime(
+                consultation_date_str, "%Y-%m-%d").date()
+
+            # Parse time interval from string (e.g., "11h-12h")
+            time_match = re.match(
+                r"(\d{1,2})h-(\d{1,2})h", consultation_time_str)
+            if time_match:
+                start_hour = int(time_match.group(1))
+                end_hour = int(time_match.group(2))
+                consultation_time = time(start_hour)
+            else:
+                return Response({'error': 'Invalid time format. Expected "hh-hh".'}, status=400)
+
+            # Combine date and time into a datetime object
+            consultation_datetime = datetime.combine(
+                consultation_date, consultation_time)
 
             # Check if there is an existing consultation with the same doctor and patient
             existing_consultation = Consultations.objects.filter(
                 patient_id=patient_id,
-                doctor_id=doctor_id
+                doctor_id=doctor_id,
+                date_de_consultation=consultation_date_str,
+                heure_de_consultation=consultation_time_str
             ).exists()
 
             if existing_consultation:
-                return Response({'error': 'A consultation with this doctor already exists for the patient.'}, status=400)
+                return Response({'error': 'A consultation with this doctor already exists for the patient at the specified date and time.'}, status=400)
+
+            # Check if there is an existing consultation at the specified date and time
+            existing_consultation = Consultations.objects.filter(
+                date_de_consultation=consultation_date,
+                heure_de_consultation=consultation_time
+            ).exists()
+
+            if existing_consultation:
+                return Response({'error': 'A consultation already exists at the specified date and time.'}, status=400)
 
             serializer.save()
             return Response(serializer.data, status=201)
@@ -235,21 +271,43 @@ class CreateConsultationView(APIView):
         return Response(serializer.errors, status=400)
 
 
+# class CreateConsultationView(APIView):
+#     def post(self, request, format=None):
+#         serializer = CreationConsultationSerializer(data=request.data)
+#         if serializer.is_valid():
+#             patient_id = serializer.validated_data.get('patient_id')
+#             doctor_id = serializer.validated_data.get('doctor_id')
+
+#             # Check if there is an existing consultation with the same doctor and patient
+#             existing_consultation = Consultations.objects.filter(
+#                 patient_id=patient_id,
+#                 doctor_id=doctor_id
+#             ).exists()
+
+#             if existing_consultation:
+#                 return Response({'error': 'A consultation with this doctor already exists for the patient.'}, status=400)
+
+#             serializer.save()
+#             return Response(serializer.data, status=201)
+
+#         return Response(serializer.errors, status=400)
+
 
 class AddDescription(generics.GenericAPIView):
-    serializer_class = ConsultationSerializer  # Replace with your actual serializer class
-    
+    # Replace with your actual serializer class
+    serializer_class = ConsultationSerializer
+
     def post(self, request, *args, **kwargs):
         consultation_id = request.data.get('consultation_id')
         consultation_desc = request.data.get('description')
-        
+
         try:
             consultation = Consultations.objects.get(id=consultation_id)
         except Consultations.DoesNotExist:
             return Response({"error": "Consultation not found."}, status=status.HTTP_404_NOT_FOUND)
-        
+
         consultation.description = consultation_desc
         consultation.save()
-        
+
         serializer = self.get_serializer(consultation)
         return Response(serializer.data, status=status.HTTP_200_OK)
