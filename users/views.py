@@ -312,12 +312,10 @@ class CreateConsultationView(APIView):
             existing_consultation = Consultations.objects.filter(
                 patient_id=patient_id,
                 doctor_id=doctor_id,
-                date_de_consultation=consultation_date_str,
-                heure_de_consultation=consultation_time_str
             ).exists()
 
             if existing_consultation:
-                return Response({'error': 'Une consultation existe aux heures et date spécifiées.'}, status=400)
+                return Response({'error': 'Un seul rendez-vous peut est pris par patient.'}, status=400)
 
             # Check if there is an existing consultation at the specified date and time
             existing_consultation = Consultations.objects.filter(
@@ -358,83 +356,6 @@ class CreateConsultationView(APIView):
 
         return Response(serializer.errors, status=400)
 
-
-
-# class CreateConsultationView(APIView):
-#     def post(self, request, format=None):
-#         serializer = CreationConsultationSerializer(data=request.data)
-#         if serializer.is_valid():
-#             patient_id = serializer.validated_data.get('patient_id')
-#             doctor_id = serializer.validated_data.get('doctor_id')
-#             consultation_date_str = serializer.validated_data.get(
-#                 'date_de_consultation')
-#             consultation_time_str = serializer.validated_data.get(
-#                 'heure_de_consultation')
-
-#             # Parse date from string
-#             consultation_date = datetime.strptime(
-#                 consultation_date_str, "%Y-%m-%d").date()
-
-#             # Parse time interval from string (e.g., "11h-12h")
-#             time_match = re.match(
-#                 r"(\d{1,2})h-(\d{1,2})h", consultation_time_str)
-#             if time_match:
-#                 start_hour = int(time_match.group(1))
-#                 end_hour = int(time_match.group(2))
-#                 consultation_time = time(start_hour)
-#             else:
-#                 return Response({'error': 'Invalid time format. Expected "hh-hh".'}, status=400)
-
-#             # Combine date and time into a datetime object
-#             consultation_datetime = datetime.combine(
-#                 consultation_date, consultation_time)
-
-#             # Check if there is an existing consultation with the same doctor and patient
-#             existing_consultation = Consultations.objects.filter(
-#                 patient_id=patient_id,
-#                 doctor_id=doctor_id,
-#                 date_de_consultation=consultation_date_str,
-#                 heure_de_consultation=consultation_time_str
-#             ).exists()
-
-#             if existing_consultation:
-#                 return Response({'error': 'Une consultation existe aux heures et date specifies.'}, status=400)
-
-#             # Check if there is an existing consultation at the specified date and time
-#             existing_consultation = Consultations.objects.filter(
-#                 date_de_consultation=consultation_date,
-#                 heure_de_consultation=consultation_time
-#             ).exists()
-
-#             if existing_consultation:
-#                 return Response({'error': 'Une consultation exists aux date et temps specifies.'}, status=400)
-
-#             serializer.save()
-#             return Response(serializer.data, status=201)
-
-#         return Response(serializer.errors, status=400)
-
-
-# class CreateConsultationView(APIView):
-#     def post(self, request, format=None):
-#         serializer = CreationConsultationSerializer(data=request.data)
-#         if serializer.is_valid():
-#             patient_id = serializer.validated_data.get('patient_id')
-#             doctor_id = serializer.validated_data.get('doctor_id')
-
-#             # Check if there is an existing consultation with the same doctor and patient
-#             existing_consultation = Consultations.objects.filter(
-#                 patient_id=patient_id,
-#                 doctor_id=doctor_id
-#             ).exists()
-
-#             if existing_consultation:
-#                 return Response({'error': 'A consultation with this doctor already exists for the patient.'}, status=400)
-
-#             serializer.save()
-#             return Response(serializer.data, status=201)
-
-#         return Response(serializer.errors, status=400)
 
 
 class AddDescription(generics.GenericAPIView):
