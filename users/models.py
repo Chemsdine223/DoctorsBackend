@@ -96,13 +96,13 @@ class Consultations(models.Model):
 
 class Schedule(models.Model):
     doctor = models.ForeignKey(Doctor, on_delete=models.CASCADE)
-    lundi = models.CharField(max_length=50, default='9H - 11H')
-    mardi = models.CharField(max_length=50, default='13H - 15H')
-    mercredi = models.CharField(max_length=50, default='10H - 14H')
-    jeudi = models.CharField(max_length=50, default='8H - 12H')
-    vendredi = models.CharField(max_length=50, default='14H - 18H')
-    samedi = models.CharField(max_length=50, default='9H - 12H')
-    dimanche = models.CharField(max_length=50, default='Bientot')
+    lundi = models.CharField(max_length=50, default='9h - 11h')
+    mardi = models.CharField(max_length=50, default='13h - 15h')
+    mercredi = models.CharField(max_length=50, default='10h - 14h')
+    jeudi = models.CharField(max_length=50, default='8h - 12h')
+    vendredi = models.CharField(max_length=50, default='14h - 18h')
+    samedi = models.CharField(max_length=50, default='9h - 12h')
+    dimanche = models.CharField(max_length=50, default='9h - 15h')
 
     
 
