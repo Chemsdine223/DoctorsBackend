@@ -217,75 +217,6 @@ class DoctorsListView(APIView):
 
 
 
-# class CreateConsultationView(APIView):
-#     def post(self, request, format=None):
-#         serializer = CreationConsultationSerializer(data=request.data)
-#         if serializer.is_valid():
-#             patient_id = serializer.validated_data.get('patient_id')
-#             doctor_id = serializer.validated_data.get('doctor_id')
-#             consultation_date_str = serializer.validated_data.get('date_de_consultation')
-#             consultation_time_str = serializer.validated_data.get('heure_de_consultation')
-
-#             # Parse date from string
-#             consultation_date = datetime.strptime(consultation_date_str, "%Y-%m-%d").date()
-
-#             # Parse time interval from string (e.g., "11h-12h")
-#             time_match = re.match(r"(\d{1,2})h-(\d{1,2})h", consultation_time_str)
-#             if time_match:
-#                 start_hour = int(time_match.group(1))
-#                 end_hour = int(time_match.group(2))
-#                 consultation_time = time(start_hour)
-#             else:
-#                 return Response({'error': 'Invalid time format. Expected "hh-hh".'}, status=400)
-
-#             # Combine date and time into a datetime object
-#             consultation_datetime = datetime.combine(consultation_date, consultation_time)
-
-#             # Check if there is an existing consultation with the same doctor and patient
-#             existing_consultation = Consultations.objects.filter(
-#                 patient_id=patient_id,
-#                 doctor_id=doctor_id,
-#                 date_de_consultation=consultation_date_str,
-#                 heure_de_consultation=consultation_time_str
-#             ).exists()
-
-#             if existing_consultation:
-#                 return Response({'error': 'Une consultation existe aux heures et date spécifiées.'}, status=400)
-
-#             # Get the doctor's schedule for the consultation date
-#             doctor_schedule = Schedule.objects.filter(doctor_id=doctor_id).first()
-
-#             if not doctor_schedule:
-#                 return Response({'error': 'Le médecin n\'a pas de planning défini.'}, status=400)
-
-#             # Get the weekday of the consultation date (0 for Monday, 1 for Tuesday, etc.)
-#             consultation_weekday = consultation_date.weekday()
-
-#             # Get the corresponding weekday attribute in the doctor's schedule
-#             weekday_attribute = Schedule._meta.get_field(f"{Schedule.weekday_names[consultation_weekday]}")
-
-#             # Get the time slot for the consultation weekday
-#             consultation_time_slot = getattr(doctor_schedule, weekday_attribute)
-
-#             # Parse the start and end times of the time slot
-#             slot_start_time_str, slot_end_time_str = consultation_time_slot.split('-')
-#             slot_start_time = datetime.strptime(slot_start_time_str.strip(), "%Hh").time()
-#             slot_end_time = datetime.strptime(slot_end_time_str.strip(), "%Hh").time()
-
-#             # Compare the consultation time with the time slot
-#             if not (slot_start_time <= consultation_time <= slot_end_time):
-#                 return Response({'error': 'Le médecin n\'est pas disponible à la date et heure spécifiées.'}, status=400)
-
-#             serializer.save()
-#             return Response(serializer.data, status=201)
-
-#         return Response(serializer.errors, status=400)
-
-
-
-
-
-
 class CreateConsultationView(APIView):
     def post(self, request, format=None):
         serializer = CreationConsultationSerializer(data=request.data)
@@ -376,3 +307,17 @@ class AddDescription(generics.GenericAPIView):
 
         serializer = self.get_serializer(consultation)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+
+
+@api_view(['DELETE'])
+def delete_consultation(request, consultation_id):
+    try:
+        consultation = Consultations.objects.get(id=consultation_id)
+        consultation.delete()
+        return Response({"message": "Consultation deleted successfully."})
+    except Consultations.DoesNotExist:
+        return Response({"message": "Consultation not found."}, status=404)
+    except Exception as e:
+        return Response({"message": str(e)}, status=500)

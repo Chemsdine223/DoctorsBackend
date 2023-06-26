@@ -14,5 +14,6 @@ urlpatterns = [
     path('consulter/',CreateConsultationView.as_view(), name='creer-consultations'),
     path('schedules/<int:doctor_id>/',GetSchedules.as_view(), name='schedule-doctor'),
     path('description/<int:id>/',AddDescription.as_view(), name='Description-doctor'),
+    path('delete/<int:consultation_id>/',delete_consultation, name='Delete-consultation'),
 
 ]
